@@ -13,8 +13,6 @@ sudo apt-get update -y && \
 sudo apt-get install -y --no-install-recommends \
     cmake \
     g++ \
-    gdb \
-    gfortran \
     git \
     libmetis-dev \
     libopenblas-dev \
