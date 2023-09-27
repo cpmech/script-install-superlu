@@ -11,5 +11,3 @@ SOURCE="${HERE}/examples"
 cd $BDIR
 cmake -S $SOURCE
 make
-
-./example01

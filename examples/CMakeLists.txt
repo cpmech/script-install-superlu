@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 project(Project)
 
-add_definitions(-Wall)
+add_definitions(-g -Wall)
 
 include(FindSuperLU.cmake)
 if(SUPERLU_FOUND)
