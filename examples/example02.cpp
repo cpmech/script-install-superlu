@@ -1,32 +1,52 @@
+#include <iostream>
+#include <vector>
+
 #include "slu_ddefs.h"
 
-main(int argc, char *argv[]) {
-    /*
-     * Purpose
-     * =======
-     *
-     * This is the small 5x5 example used in the Sections 2 and 3 of the
-     * Users’ Guide to illustrate how to call a SuperLU routine, and the
-     * matrix data structures used by SuperLU.
-     *
-     */
-    SuperMatrix super_mat_a, super_mat_l, super_mat_u, super_mat_b;
-    double *values, *rhs;
-    int *row_indices, *col_pointers;
-    int *perm_r; /* row permutations from partial pivoting */
-    int *perm_c; /* column permutation vector */
-    int nrhs, info, i, m, n, nnz;
+using namespace std;
+
+// This is the small 5x5 example used in the Sections 2 and 3 of the
+// Users' Guide to illustrate how to call a SuperLU routine, and the
+// matrix data structures used by SuperLU.
+
+int main(int argc, char *argv[]) {
+
+    cout << " >>>>> ~+~+~+~+~+~+~+~+~+~+~+~+ <<<<< " << endl;
+    cout << " . . . Hello SuperLU Example 02 . . . " << endl;
+    cout << " >>>>> ~+~+~+~+~+~+~+~+~+~+~+~+ <<<<< " << endl;
+
+    // initialize matrix A
+    // s . u u .
+    // l u . . .
+    // . l p . .
+    // . . . e u
+    // l l . . r
+    SuperMatrix super_mat_a;
+    SuperMatrix super_mat_l;
+    SuperMatrix super_mat_u;
+    SuperMatrix super_mat_b;
+    double *values;
+    double *rhs;
+    int *row_indices;
+    int *col_pointers;
+    int *perm_r; // row permutations from partial pivoting
+    int *perm_c; // column permutation vector
+    int nrhs, info, i;
     superlu_options_t options;
     SuperLUStat_t stat;
     /* Initialize matrix A. */
-    m = n = 5;
-    nnz = 12;
-    if (!(values = doubleMalloc(nnz)))
+    int m = 5;
+    int n = 5;
+    int nnz = 12;
+    if (!(values = doubleMalloc(nnz))) {
         ABORT("Malloc fails for a[].");
-    if (!(row_indices = intMalloc(nnz)))
+    }
+    if (!(row_indices = intMalloc(nnz))) {
         ABORT("Malloc fails for asub[].");
-    if (!(col_pointers = intMalloc(n + 1)))
+    }
+    if (!(col_pointers = intMalloc(n + 1))) {
         ABORT("Malloc fails for xa[].");
+    }
     double s = 19.0;
     double u = 21.0;
     double p = 16.0;
@@ -123,4 +143,6 @@ main(int argc, char *argv[]) {
     Destroy_SuperNode_Matrix(&super_mat_l);
     Destroy_CompCol_Matrix(&super_mat_u);
     StatFree(&stat);
+
+    return 0;
 }

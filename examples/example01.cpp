@@ -1,6 +1,15 @@
+#include <iostream>
+
 #include "slu_ddefs.h"
 
-main(int argc, char *argv[]) {
+using namespace std;
+
+int main(int argc, char *argv[]) {
+
+    cout << " >>>>> ~+~+~+~+~+~+~+~+~+~+~+~+ <<<<< " << endl;
+    cout << " . . . Hello SuperLU Example 01 . . . " << endl;
+    cout << " >>>>> ~+~+~+~+~+~+~+~+~+~+~+~+ <<<<< " << endl;
+
     /*
      * Purpose
      * =======
@@ -124,4 +133,6 @@ main(int argc, char *argv[]) {
     Destroy_SuperNode_Matrix(&L);
     Destroy_CompCol_Matrix(&U);
     StatFree(&stat);
+
+    return 0;
 }
