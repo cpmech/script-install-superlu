@@ -10,5 +10,14 @@ else()
     message(FATAL_ERROR "cannot compile the code without SUPERLU")
 endif()
 
-add_executable(example01 example01.cpp)
-target_link_libraries(example01 PUBLIC ${SUPERLU_LIBS})
+set(EXAMPLES
+    example01
+    example02
+    example03
+)
+
+foreach(example ${EXAMPLES})
+    add_executable(${example} ${example}.cpp)
+    target_link_libraries(${example} PUBLIC ${SUPERLU_LIBS})
+endforeach()
+
