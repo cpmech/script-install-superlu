@@ -89,10 +89,31 @@ main(int argc, char *argv[]) {
 
     /* Solve the linear system. */
     dgssv(&options, &A, perm_c, perm_r, &L, &U, &B, &stat, &info);
+
     dPrint_CompCol_Matrix("A", &A);
     dPrint_CompCol_Matrix("U", &U);
     dPrint_SuperNode_Matrix("L", &L);
     print_int_vec("\nperm_r", m, perm_r);
+    printf("\n");
+
+    if (info == 0) {
+
+        if (options.PrintStat) {
+            StatPrint(&stat);
+        }
+
+        /* This is how you could access the solution matrix. */
+        double *sol = (double *)((DNformat *)B.Store)->nzval;
+        (void)sol; // suppress unused variable warning
+        printf("x = ");
+        for (int k = 0; k < n; k++) {
+            printf("%g ", sol[k]);
+        }
+        printf("\n");
+
+    } else {
+        printf("dgssv() error returns INFO= %lld\n", (long long)info);
+    }
 
     /* De-allocate storage */
     SUPERLU_FREE(rhs);
