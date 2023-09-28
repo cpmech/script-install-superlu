@@ -10,63 +10,62 @@ main(int argc, char *argv[]) {
      * matrix data structures used by SuperLU.
      *
      */
-    SuperMatrix A, L, U, B;
-    double *a, *rhs;
-    double s, u, p, e, r, l;
-    int *asub, *xa;
+    SuperMatrix super_mat_a, super_mat_l, super_mat_u, super_mat_b;
+    double *values, *rhs;
+    int *row_indices, *col_pointers;
     int *perm_r; /* row permutations from partial pivoting */
     int *perm_c; /* column permutation vector */
-    int nrhs, info, i, m, n, nnz, permc_spec;
+    int nrhs, info, i, m, n, nnz;
     superlu_options_t options;
     SuperLUStat_t stat;
     /* Initialize matrix A. */
     m = n = 5;
     nnz = 12;
-    if (!(a = doubleMalloc(nnz)))
+    if (!(values = doubleMalloc(nnz)))
         ABORT("Malloc fails for a[].");
-    if (!(asub = intMalloc(nnz)))
+    if (!(row_indices = intMalloc(nnz)))
         ABORT("Malloc fails for asub[].");
-    if (!(xa = intMalloc(n + 1)))
+    if (!(col_pointers = intMalloc(n + 1)))
         ABORT("Malloc fails for xa[].");
-    s = 19.0;
-    u = 21.0;
-    p = 16.0;
-    e = 5.0;
-    r = 18.0;
-    l = 12.0;
-    a[0] = s;
-    a[1] = l;
-    a[2] = l;
-    a[3] = u;
-    a[4] = l;
-    a[5] = l;
-    a[6] = u;
-    a[7] = p;
-    a[8] = u;
-    a[9] = e;
-    a[10] = u;
-    a[11] = r;
-    asub[0] = 0;
-    asub[1] = 1;
-    asub[2] = 4;
-    asub[3] = 1;
-    asub[4] = 2;
-    asub[5] = 4;
-    asub[6] = 0;
-    asub[7] = 2;
-    asub[8] = 0;
-    asub[9] = 3;
-    asub[10] = 3;
-    asub[11] = 4;
-    xa[0] = 0;
-    xa[1] = 3;
-    xa[2] = 6;
-    xa[3] = 8;
-    xa[4] = 10;
-    xa[5] = 12;
+    double s = 19.0;
+    double u = 21.0;
+    double p = 16.0;
+    double e = 5.0;
+    double r = 18.0;
+    double l = 12.0;
+    values[0] = s;
+    values[1] = l;
+    values[2] = l;
+    values[3] = u;
+    values[4] = l;
+    values[5] = l;
+    values[6] = u;
+    values[7] = p;
+    values[8] = u;
+    values[9] = e;
+    values[10] = u;
+    values[11] = r;
+    row_indices[0] = 0;
+    row_indices[1] = 1;
+    row_indices[2] = 4;
+    row_indices[3] = 1;
+    row_indices[4] = 2;
+    row_indices[5] = 4;
+    row_indices[6] = 0;
+    row_indices[7] = 2;
+    row_indices[8] = 0;
+    row_indices[9] = 3;
+    row_indices[10] = 3;
+    row_indices[11] = 4;
+    col_pointers[0] = 0;
+    col_pointers[1] = 3;
+    col_pointers[2] = 6;
+    col_pointers[3] = 8;
+    col_pointers[4] = 10;
+    col_pointers[5] = 12;
 
     /* Create matrix A in the format expected by SuperLU. */
-    dCreate_CompCol_Matrix(&A, m, n, nnz, a, asub, xa, SLU_NC, SLU_D, SLU_GE);
+    dCreate_CompCol_Matrix(&super_mat_a, m, n, nnz, values, row_indices, col_pointers, SLU_NC, SLU_D, SLU_GE);
 
     /* Create right-hand side matrix B. */
     nrhs = 1;
@@ -74,7 +73,7 @@ main(int argc, char *argv[]) {
         ABORT("Malloc fails for rhs[].");
     for (i = 0; i < m; ++i)
         rhs[i] = 1.0;
-    dCreate_Dense_Matrix(&B, m, nrhs, rhs, m, SLU_DN, SLU_D, SLU_GE);
+    dCreate_Dense_Matrix(&super_mat_b, m, nrhs, rhs, m, SLU_DN, SLU_D, SLU_GE);
     if (!(perm_r = intMalloc(m)))
         ABORT("Malloc fails for perm_r[].");
     if (!(perm_c = intMalloc(n)))
@@ -88,11 +87,11 @@ main(int argc, char *argv[]) {
     StatInit(&stat);
 
     /* Solve the linear system. */
-    dgssv(&options, &A, perm_c, perm_r, &L, &U, &B, &stat, &info);
+    dgssv(&options, &super_mat_a, perm_c, perm_r, &super_mat_l, &super_mat_u, &super_mat_b, &stat, &info);
 
-    dPrint_CompCol_Matrix("A", &A);
-    dPrint_CompCol_Matrix("U", &U);
-    dPrint_SuperNode_Matrix("L", &L);
+    dPrint_CompCol_Matrix("A", &super_mat_a);
+    dPrint_CompCol_Matrix("U", &super_mat_u);
+    dPrint_SuperNode_Matrix("L", &super_mat_l);
     print_int_vec("\nperm_r", m, perm_r);
     printf("\n");
 
@@ -103,7 +102,7 @@ main(int argc, char *argv[]) {
         }
 
         /* This is how you could access the solution matrix. */
-        double *sol = (double *)((DNformat *)B.Store)->nzval;
+        double *sol = (double *)((DNformat *)super_mat_b.Store)->nzval;
         (void)sol; // suppress unused variable warning
         printf("x = ");
         for (int k = 0; k < n; k++) {
@@ -119,9 +118,9 @@ main(int argc, char *argv[]) {
     SUPERLU_FREE(rhs);
     SUPERLU_FREE(perm_r);
     SUPERLU_FREE(perm_c);
-    Destroy_CompCol_Matrix(&A);
-    Destroy_SuperMatrix_Store(&B);
-    Destroy_SuperNode_Matrix(&L);
-    Destroy_CompCol_Matrix(&U);
+    Destroy_CompCol_Matrix(&super_mat_a);
+    Destroy_SuperMatrix_Store(&super_mat_b);
+    Destroy_SuperNode_Matrix(&super_mat_l);
+    Destroy_CompCol_Matrix(&super_mat_u);
     StatFree(&stat);
 }
