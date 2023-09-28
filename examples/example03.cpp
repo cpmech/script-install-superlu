@@ -101,20 +101,21 @@ int main(int argc, char **argv) try {
           &stat,
           &info);
 
+    // check info
     if (info == 0) {
 
+        // print stat
         if (options.PrintStat) {
             StatPrint(&stat);
         }
 
-        /* This is how you could access the solution matrix. */
-        // double *sol = (double *)((DNformat *)super_mat_b.Store)->nzval;
-        // (void)sol; // suppress unused variable warning
-        // printf("x = ");
-        // for (int k = 0; k < n; k++) {
-        // printf("%g ", sol[k]);
-        // }
-        // printf("\n");
+        // access the solution vector (matrix)
+        double *sol = (double *)((DNformat *)super_mat_b.Store)->nzval;
+        printf("x = ");
+        for (int k = 0; k < n; k++) {
+            printf("%g ", sol[k]);
+        }
+        printf("\n");
 
         SCformat *Lstore = (SCformat *)super_mat_l.Store;
         NCformat *Ustore = (NCformat *)super_mat_u.Store;
@@ -137,12 +138,6 @@ int main(int argc, char **argv) try {
                    mem_usage.for_lu / 1e6, mem_usage.total_needed / 1e6);
         }
     }
-
-    // print matrices
-    // dPrint_CompCol_Matrix("A", &super_mat_a);
-    // dPrint_CompCol_Matrix("U", &super_mat_u);
-    // dPrint_SuperNode_Matrix("L", &super_mat_l);
-    // print_int_vec("\nperm_r", m, perm_r.data());
 
     // deallocate storage
     Destroy_SuperMatrix_Store(&super_mat_a);

@@ -9,7 +9,7 @@ using namespace std;
 // Users' Guide to illustrate how to call a SuperLU routine, and the
 // matrix data structures used by SuperLU.
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) try {
 
     cout << " >>>>> ~+~+~+~+~+~+~+~+~+~+~+~+ <<<<< " << endl;
     cout << " . . . Hello SuperLU Example 02 . . . " << endl;
@@ -21,109 +21,96 @@ int main(int argc, char *argv[]) {
     // . l p . .
     // . . . e u
     // l l . . r
-    SuperMatrix super_mat_a;
-    SuperMatrix super_mat_l;
-    SuperMatrix super_mat_u;
-    SuperMatrix super_mat_b;
-    double *values;
-    double *rhs;
-    int *row_indices;
-    int *col_pointers;
-    int *perm_r; // row permutations from partial pivoting
-    int *perm_c; // column permutation vector
-    int nrhs, info, i;
-    superlu_options_t options;
-    SuperLUStat_t stat;
-    /* Initialize matrix A. */
     int m = 5;
     int n = 5;
     int nnz = 12;
-    if (!(values = doubleMalloc(nnz))) {
-        ABORT("Malloc fails for a[].");
-    }
-    if (!(row_indices = intMalloc(nnz))) {
-        ABORT("Malloc fails for asub[].");
-    }
-    if (!(col_pointers = intMalloc(n + 1))) {
-        ABORT("Malloc fails for xa[].");
-    }
     double s = 19.0;
     double u = 21.0;
     double p = 16.0;
     double e = 5.0;
     double r = 18.0;
     double l = 12.0;
-    values[0] = s;
-    values[1] = l;
-    values[2] = l;
-    values[3] = u;
-    values[4] = l;
-    values[5] = l;
-    values[6] = u;
-    values[7] = p;
-    values[8] = u;
-    values[9] = e;
-    values[10] = u;
-    values[11] = r;
-    row_indices[0] = 0;
-    row_indices[1] = 1;
-    row_indices[2] = 4;
-    row_indices[3] = 1;
-    row_indices[4] = 2;
-    row_indices[5] = 4;
-    row_indices[6] = 0;
-    row_indices[7] = 2;
-    row_indices[8] = 0;
-    row_indices[9] = 3;
-    row_indices[10] = 3;
-    row_indices[11] = 4;
-    col_pointers[0] = 0;
-    col_pointers[1] = 3;
-    col_pointers[2] = 6;
-    col_pointers[3] = 8;
-    col_pointers[4] = 10;
-    col_pointers[5] = 12;
+    auto values = vector<double>{
+        // also called "a"
+        s, l, l, // j=0 p=(0),1,2,
+        u, l, l, // j=1 p=(3),4,5
+        u, p,    // j=2 p=(6),7
+        u, e,    // j=3 p=(8),9
+        u, r,    // j=4 p=(10),11
+    };           //     p=(12)
+    auto row_indices = vector<int>{
+        // also called "asub"
+        0, 1, 4, //
+        1, 2, 4, //
+        0, 2,    //
+        0, 3,    //
+        3, 4,    //
+    };
+    auto col_pointers = vector<int>{0, 3, 6, 8, 10, 12}; // also called "xa"
 
-    /* Create matrix A in the format expected by SuperLU. */
-    dCreate_CompCol_Matrix(&super_mat_a, m, n, nnz, values, row_indices, col_pointers, SLU_NC, SLU_D, SLU_GE);
+    // create matrix A in the format expected by SuperLU
+    SuperMatrix super_mat_a;
+    dCreate_CompCol_Matrix(&super_mat_a,
+                           m,
+                           n,
+                           nnz,
+                           values.data(),
+                           row_indices.data(),
+                           col_pointers.data(),
+                           SLU_NC,
+                           SLU_D,
+                           SLU_GE);
 
-    /* Create right-hand side matrix B. */
-    nrhs = 1;
-    if (!(rhs = doubleMalloc(m * nrhs)))
-        ABORT("Malloc fails for rhs[].");
-    for (i = 0; i < m; ++i)
-        rhs[i] = 1.0;
-    dCreate_Dense_Matrix(&super_mat_b, m, nrhs, rhs, m, SLU_DN, SLU_D, SLU_GE);
-    if (!(perm_r = intMalloc(m)))
-        ABORT("Malloc fails for perm_r[].");
-    if (!(perm_c = intMalloc(n)))
-        ABORT("Malloc fails for perm_c[].");
+    // create right-hand side matrix B
+    int nrhs = 1;
+    auto rhs = vector<double>(m * nrhs, 1.0);
+    SuperMatrix super_mat_b;
+    dCreate_Dense_Matrix(&super_mat_b,
+                         m,
+                         nrhs,
+                         rhs.data(),
+                         m,
+                         SLU_DN,
+                         SLU_D,
+                         SLU_GE);
 
-    /* Set the default input options. */
+    // allocate permutation vectors
+    auto perm_r = vector<int>(m);
+    auto perm_c = vector<int>(n);
+
+    // set the default input options
+    superlu_options_t options;
     set_default_options(&options);
     options.ColPerm = NATURAL;
 
-    /* Initialize the statistics variables. */
+    // initialize the statistics variables
+    SuperLUStat_t stat;
     StatInit(&stat);
 
-    /* Solve the linear system. */
-    dgssv(&options, &super_mat_a, perm_c, perm_r, &super_mat_l, &super_mat_u, &super_mat_b, &stat, &info);
+    // solve the linear system
+    SuperMatrix super_mat_l;
+    SuperMatrix super_mat_u;
+    int info;
+    dgssv(&options,
+          &super_mat_a,
+          perm_c.data(),
+          perm_r.data(),
+          &super_mat_l,
+          &super_mat_u,
+          &super_mat_b,
+          &stat,
+          &info);
 
-    dPrint_CompCol_Matrix("A", &super_mat_a);
-    dPrint_CompCol_Matrix("U", &super_mat_u);
-    dPrint_SuperNode_Matrix("L", &super_mat_l);
-    print_int_vec("\nperm_r", m, perm_r);
-    printf("\n");
-
+    // check info
     if (info == 0) {
 
+        // print stat
         if (options.PrintStat) {
             StatPrint(&stat);
         }
 
-        /* This is how you could access the solution matrix. */
+        // access the solution vector (matrix)
         double *sol = (double *)((DNformat *)super_mat_b.Store)->nzval;
-        (void)sol; // suppress unused variable warning
         printf("x = ");
         for (int k = 0; k < n; k++) {
             printf("%g ", sol[k]);
@@ -131,18 +118,30 @@ int main(int argc, char *argv[]) {
         printf("\n");
 
     } else {
+        // print error
         printf("dgssv() error returns INFO= %lld\n", (long long)info);
     }
 
-    /* De-allocate storage */
-    SUPERLU_FREE(rhs);
-    SUPERLU_FREE(perm_r);
-    SUPERLU_FREE(perm_c);
-    Destroy_CompCol_Matrix(&super_mat_a);
+    // deallocate storage
+    Destroy_SuperMatrix_Store(&super_mat_a);
     Destroy_SuperMatrix_Store(&super_mat_b);
     Destroy_SuperNode_Matrix(&super_mat_l);
     Destroy_CompCol_Matrix(&super_mat_u);
     StatFree(&stat);
 
+    // done
     return 0;
+
+} catch (std::exception &e) {
+    std::cout << e.what() << std::endl;
+    return 1;
+} catch (std::string &msg) {
+    std::cout << msg.c_str() << std::endl;
+    return 1;
+} catch (const char *msg) {
+    std::cout << msg << std::endl;
+    return 1;
+} catch (...) {
+    std::cout << "some unknown exception happened" << std::endl;
+    return 1;
 }
