@@ -63,7 +63,7 @@ int main(int argc, char **argv) try {
 
     // create right-hand side matrix B
     int nrhs = 1;
-    auto rhs = vector<double>(nrhs, 1.0);
+    auto rhs = vector<double>(m * nrhs, 1.0);
     SuperMatrix super_mat_b;
     dCreate_Dense_Matrix(&super_mat_b,
                          m,
@@ -75,15 +75,8 @@ int main(int argc, char **argv) try {
                          SLU_GE);
 
     // allocate permutation vectors
-    // auto perm_r = vector<int>(m); // row permutations from partial pivoting
-    // auto perm_c = vector<int>(n); // column permutation vector
-
-    int *perm_c; /* column permutation vector */
-    int *perm_r; /* row permutations from partial pivoting */
-    if (!(perm_c = int32Malloc(n)))
-        ABORT("Malloc fails for perm_c[].");
-    if (!(perm_r = int32Malloc(m)))
-        ABORT("Malloc fails for perm_r[].");
+    auto perm_r = vector<int>(m); // row permutations from partial pivoting
+    auto perm_c = vector<int>(n); // column permutation vector
 
     // set the default input options
     superlu_options_t options;
@@ -100,8 +93,8 @@ int main(int argc, char **argv) try {
     int info = 0;
     dgssv(&options,
           &super_mat_a,
-          perm_c,
-          perm_r,
+          perm_c.data(),
+          perm_r.data(),
           &super_mat_l,
           &super_mat_u,
           &super_mat_b,
@@ -152,11 +145,11 @@ int main(int argc, char **argv) try {
     // print_int_vec("\nperm_r", m, perm_r.data());
 
     // deallocate storage
-    // Destroy_CompCol_Matrix(&super_mat_a);
-    // Destroy_SuperMatrix_Store(&super_mat_b);
-    // Destroy_SuperNode_Matrix(&super_mat_l);
-    // Destroy_CompCol_Matrix(&super_mat_u);
-    // StatFree(&stat);
+    Destroy_SuperMatrix_Store(&super_mat_a);
+    Destroy_SuperMatrix_Store(&super_mat_b);
+    Destroy_SuperNode_Matrix(&super_mat_l);
+    Destroy_CompCol_Matrix(&super_mat_u);
+    StatFree(&stat);
 
     // done
     return 0;
